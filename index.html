@@ -51,12 +51,10 @@
 					<div id="output" class="result" aria-live="polite" style="display:none"></div>
 				</form>
 
-				<!-- NASA API integration card -->
-				<section id="nasa" style="margin-top:20px">
-					<h2 style="margin:0 0 12px 0;font-size:1.05rem">NASA API Explorer</h2>
-					<div class="small muted" style="margin-bottom:10px">Use the DEMO_KEY or paste your own NASA API key. Choose an endpoint and fetch data.</div>
-
-					<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end">
+			<!-- NASA API integration card -->
+			<section id="nasa" style="margin-top:20px">
+				<h2 style="margin:0 0 12px 0;font-size:1.05rem">NASA API Explorer</h2>
+				<div class="small muted" style="margin-bottom:10px">Use the DEMO_KEY or paste your own NASA API key. Choose an endpoint and fetch data. <a href="https://github.com/nasa/apod-api" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:600">NASA APOD API ↗</a></div>					<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end">
 						<div>
 							<label for="apiKey">NASA API Key</label>
 							<input id="apiKey" placeholder="DEMO_KEY or your api key" value="DEMO_KEY" />
@@ -108,6 +106,34 @@
 						<details style="margin-top:8px"><summary>Raw JSON</summary><pre id="rawJson" style="max-height:300px;overflow:auto;background:#f8fafc;padding:8px;border-radius:6px"></pre></details>
 					</div>
 				</section>
+      
+      <!-- Milky Way Sound Mixer -->
+      <section id="mixer" style="margin-top:22px">
+        <h2 style="margin:0 0 12px 0;font-size:1.05rem">Milky Way Sound Mixer</h2>
+        <div class="small muted">Create, mix and visualize "sounds of the Milky Way" — play tracks alone or together and watch sound-wave shapes. Inspired by <a href="https://github.com/nasa/apod-api" target="_blank" style="color:var(--accent);text-decoration:none">NASA's APOD API</a>.</div>
+
+        <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;align-items:flex-start">
+          <div style="flex:1 1 320px;min-width:280px">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+              <button id="addSine" type="button">Add synth</button>
+              <button id="nasaSounds" type="button" class="secondary" style="background:#e0f2fe;color:#0284c7">NASA preset</button>
+              <label for="fileInput" class="small muted" style="margin:0">or upload</label>
+              <input id="fileInput" type="file" accept="audio/*" />
+            </div>										<div id="trackList" style="display:flex;flex-direction:column;gap:8px"></div>
+            
+										<div style="display:flex;gap:8px;margin-top:12px">
+											<button id="playAll" type="button">Play all</button>
+											<button id="pauseAll" type="button" class="secondary">Pause</button>
+											<button id="stopAll" type="button" class="secondary">Stop</button>
+										</div>
+									</div>
+          
+									<div style="flex:1 1 360px;min-width:300px">
+										<canvas id="viz" width="800" height="400" style="width:100%;height:300px;border-radius:8px;background:#0b1220;display:block"></canvas>
+										<div class="small muted" style="margin-top:6px">Visualization: waveform + radial frequency shape. Add tracks and press Play.</div>
+									</div>
+								</div>
+							</section>
 
 			<footer>
 				Tip: If the date picker isn't available in your browser, enter the date as YYYY-MM-DD.
@@ -314,4 +340,258 @@
 	</script>
 </body>
 </html>
+
+			// ---------- Milky Way Sound Mixer (WebAudio) ----------
+			const addSineBtn = document.getElementById('addSine');
+			const fileInput = document.getElementById('fileInput');
+			const trackList = document.getElementById('trackList');
+			const playAll = document.getElementById('playAll');
+			const pauseAll = document.getElementById('pauseAll');
+			const stopAll = document.getElementById('stopAll');
+			const canvas = document.getElementById('viz');
+			const ctx = canvas.getContext('2d');
+
+			let audioCtx = null;
+			const tracks = []; // {id, name, type, node, gain, sourceForOneShot?, playing, solo, buffer}
+			const master = {gainNode: null, analyser: null};
+
+			function ensureAudioContext(){
+				if(!audioCtx){
+					audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+					master.gainNode = audioCtx.createGain();
+					master.gainNode.gain.value = 0.9;
+					master.analyser = audioCtx.createAnalyser();
+					master.analyser.fftSize = 2048;
+					master.gainNode.connect(master.analyser);
+					master.analyser.connect(audioCtx.destination);
+				}
+			}
+
+			function addSynthTrack(){
+				ensureAudioContext();
+				const id = crypto ? crypto.randomUUID() : String(Date.now());
+				const gain = audioCtx.createGain();
+				gain.gain.value = 0.7;
+				gain.connect(master.gainNode);
+
+				// create an oscillator + slow LFO for a spacey feel
+				const osc = audioCtx.createOscillator();
+				osc.type = 'sine';
+				const freq = 110 + Math.round(Math.random()*800);
+				osc.frequency.value = freq;
+
+				const lfo = audioCtx.createOscillator();
+				lfo.type = 'sine';
+				lfo.frequency.value = 0.05 + Math.random()*0.5; // slow
+				const lfoGain = audioCtx.createGain();
+				lfoGain.gain.value = 60 + Math.random()*120;
+				lfo.connect(lfoGain);
+				lfoGain.connect(osc.frequency);
+
+				osc.connect(gain);
+
+				// start immediately but keep playing state controlled by gain
+				osc.start();
+				lfo.start();
+
+				const track = {id, name:`Synth ${tracks.length+1}`, type:'synth', oscillator:osc, lfo, lfoGain, gainNode:gain, playing:false, solo:false};
+				tracks.push(track);
+				renderTrack(track);
+			}
+
+			async function addFileTrack(file){
+				ensureAudioContext();
+				const id = crypto ? crypto.randomUUID() : String(Date.now());
+				const gain = audioCtx.createGain();
+				gain.gain.value = 0.9;
+				gain.connect(master.gainNode);
+
+				const array = await file.arrayBuffer();
+				const buffer = await audioCtx.decodeAudioData(array);
+				const track = {id, name:file.name, type:'file', buffer, gainNode:gain, playing:false, solo:false, source:null};
+				tracks.push(track);
+				renderTrack(track);
+			}
+
+			function renderTrack(track){
+				const item = document.createElement('div');
+				item.style.display = 'flex';
+				item.style.gap = '8px';
+				item.style.alignItems = 'center';
+				item.style.padding = '8px';
+				item.style.border = '1px solid #e6edf3';
+				item.style.borderRadius = '8px';
+				item.id = 'track-'+track.id;
+
+				const title = document.createElement('div');
+				title.style.flex = '1';
+				title.innerHTML = `<strong>${escapeHtml(track.name)}</strong><div class="small muted">${escapeHtml(track.type)}</div>`;
+
+				const vol = document.createElement('input');
+				vol.type = 'range'; vol.min = 0; vol.max=1; vol.step=0.01; vol.value = track.gainNode.gain.value || 0.8;
+				vol.style.width = '100px';
+				vol.addEventListener('input', ()=>{ track.gainNode.gain.value = parseFloat(vol.value); });
+
+				const btnPlay = document.createElement('button'); btnPlay.textContent = 'Play';
+				btnPlay.addEventListener('click', ()=>{ toggleTrackPlay(track, btnPlay); });
+
+				const btnSolo = document.createElement('button'); btnSolo.textContent = 'Solo';
+				btnSolo.addEventListener('click', ()=>{ track.solo = !track.solo; updateSoloStates(); btnSolo.style.background = track.solo ? '#fde68a' : ''; });
+
+				const btnMute = document.createElement('button'); btnMute.textContent = 'Mute';
+				btnMute.addEventListener('click', ()=>{ track.gainNode.gain.value = (track.gainNode.gain.value>0)?0:0.8; vol.value = track.gainNode.gain.value; });
+
+				const remove = document.createElement('button'); remove.textContent = 'Remove';
+				remove.addEventListener('click', ()=>{ stopTrack(track); item.remove(); const idx = tracks.findIndex(t=>t.id===track.id); if(idx>=0) tracks.splice(idx,1); });
+
+				item.appendChild(title);
+				item.appendChild(vol);
+				item.appendChild(btnPlay);
+				item.appendChild(btnSolo);
+				item.appendChild(btnMute);
+				item.appendChild(remove);
+
+				trackList.appendChild(item);
+			}
+
+			function updateSoloStates(){
+				const anySolo = tracks.some(t=>t.solo);
+				tracks.forEach(t=>{
+					if(anySolo){
+						t.gainNode.gain.value = t.solo ? (t.gainNode.gain.value || 0.8) : 0;
+					}
+				});
+			}
+
+			function toggleTrackPlay(track, btn){
+				if(track.type === 'synth'){
+					track.playing = !track.playing;
+					track.gainNode.gain.value = track.playing ? 0.8 : 0;
+					btn.textContent = track.playing ? 'Pause' : 'Play';
+				}else if(track.type === 'file'){
+					if(track.playing){
+						// stop
+						if(track.source){ track.source.stop(); track.source.disconnect(); }
+						track.playing = false; btn.textContent = 'Play';
+					}else{
+						// create new buffer source
+						const src = audioCtx.createBufferSource();
+						src.buffer = track.buffer;
+						src.loop = true;
+						src.connect(track.gainNode);
+						src.start();
+						track.source = src;
+						track.playing = true; btn.textContent = 'Pause';
+					}
+				}
+			}
+
+			function stopTrack(track){
+				if(track.type === 'synth'){
+					track.gainNode.gain.value = 0;
+					track.playing = false;
+				}else if(track.type === 'file'){
+					if(track.source){ track.source.stop(); track.source.disconnect(); track.source = null; }
+					track.playing = false;
+				}
+			}
+
+			function stopAllTracks(){ tracks.slice().forEach(stopTrack); }
+
+			playAll.addEventListener('click', ()=>{ ensureAudioContext(); // resume if suspended
+				if(audioCtx.state === 'suspended') audioCtx.resume();
+				// for synths, set gain to default; for files, start sources
+				tracks.forEach(t=>{
+					if(t.type === 'synth'){ t.playing = true; t.gainNode.gain.value = 0.8; const btn = document.querySelector('#track-'+t.id+' button'); if(btn) btn.textContent='Pause'; }
+					if(t.type === 'file' && !t.playing){ toggleTrackPlay(t, document.querySelector('#track-'+t.id+' button')); }
+				});
+			});
+
+			pauseAll.addEventListener('click', ()=>{ audioCtx && audioCtx.suspend(); });
+			stopAll.addEventListener('click', ()=>{ if(audioCtx && audioCtx.state!=='closed') audioCtx.close().then(()=>{ audioCtx=null; master.gainNode=null; master.analyser=null; tracks.length=0; trackList.innerHTML=''; drawClear(); }); });
+
+    addSineBtn.addEventListener('click', addSynthTrack);
+    fileInput.addEventListener('change', (e)=>{ const f = e.target.files && e.target.files[0]; if(f) addFileTrack(f); e.target.value=''; });
+
+    // NASA preset: add 3 spacey synth tracks inspired by cosmic sounds
+    document.getElementById('nasaSounds').addEventListener('click', ()=>{
+      const presets = [
+        {name:'Cosmic Hum', freq:85},
+        {name:'Star Pulse', freq:147},
+        {name:'Nebula Wave', freq:258}
+      ];
+      presets.forEach(p=>{
+        ensureAudioContext();
+        const id = crypto ? crypto.randomUUID() : String(Date.now()+Math.random());
+        const gain = audioCtx.createGain();
+        gain.gain.value = 0.6;
+        gain.connect(master.gainNode);
+
+        const osc = audioCtx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = p.freq;
+
+        const lfo = audioCtx.createOscillator();
+        lfo.type = 'triangle';
+        lfo.frequency.value = 0.1 + Math.random()*0.3;
+        const lfoGain = audioCtx.createGain();
+        lfoGain.gain.value = 20 + Math.random()*40;
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+
+        osc.connect(gain);
+        osc.start();
+        lfo.start();
+
+        const track = {id, name:p.name, type:'synth', oscillator:osc, lfo, lfoGain, gainNode:gain, playing:false, solo:false};
+        tracks.push(track);
+        renderTrack(track);
+      });
+    });
+			// Visualization loop
+			function drawClear(){ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#071018'; ctx.fillRect(0,0,canvas.width,canvas.height); }
+
+			function draw(){
+				requestAnimationFrame(draw);
+				if(!audioCtx || !master.analyser) { drawClear(); return; }
+				const w = canvas.width; const h = canvas.height;
+				ctx.fillStyle = '#071018'; ctx.fillRect(0,0,w,h);
+
+				const bufferLength = master.analyser.fftSize;
+				const data = new Uint8Array(bufferLength);
+				master.analyser.getByteTimeDomainData(data);
+
+				// waveform
+				ctx.lineWidth = 2;
+				ctx.strokeStyle = '#60a5fa';
+				ctx.beginPath();
+				const slice = w / bufferLength;
+				for(let i=0;i<bufferLength;i++){
+					const v = data[i]/128.0; // 0..2
+					const y = v * h/2;
+					const x = i*slice;
+					if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+				}
+				ctx.stroke();
+
+				// radial frequency-based shape
+				const freqData = new Uint8Array(master.analyser.frequencyBinCount);
+				master.analyser.getByteFrequencyData(freqData);
+				const cx = w*0.75; const cy = h*0.5; const radius = Math.min(w,h)*0.18;
+				ctx.beginPath();
+				const bins = 48;
+				for(let i=0;i<bins;i++){
+					const v = freqData[Math.floor(i*(freqData.length/bins))]/255;
+					const angle = (i/bins)*Math.PI*2;
+					const r = radius + v*120;
+					const x = cx + Math.cos(angle)*r;
+					const y = cy + Math.sin(angle)*r;
+					if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+				}
+				ctx.closePath();
+				ctx.fillStyle = 'rgba(99,102,241,0.18)'; ctx.fill();
+				ctx.strokeStyle = 'rgba(99,102,241,0.6)'; ctx.lineWidth=1.5; ctx.stroke();
+			}
+
+			draw();
 
