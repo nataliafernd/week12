@@ -1,423 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planetary Soundwaves - AI Art Generator</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Courier New', monospace;
-            background: #000;
-            color: #fff;
-            overflow-x: hidden;
-        }
-
-        .stars {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .star {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: #fff;
-            border-radius: 50%;
-            animation: twinkle 3s infinite;
-        }
-
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
-        }
-
-        header {
-            position: relative;
-            z-index: 10;
-            text-align: center;
-            padding: 2rem 1rem 1rem;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            letter-spacing: 0.3rem;
-            text-transform: uppercase;
-            background: linear-gradient(45deg, #c4b5fd 0%, #fbbf24 50%, #f9a8d4 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.5rem;
-        }
-
-        .subtitle {
-            font-size: 0.9rem;
-            color: #a5b4fc;
-            letter-spacing: 0.15rem;
-        }
-
-        .container {
-            position: relative;
-            z-index: 5;
-            max-width: 1800px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        .solar-system {
-            position: relative;
-            width: 100%;
-            height: 500px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 3rem 0;
-        }
-
-        .sun {
-            position: absolute;
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #ffd700, #ff8c00, #ff4500);
-            box-shadow: 0 0 80px #ffa500, 0 0 120px #ff6347, 0 0 160px #ff4500;
-            cursor: pointer;
-            transition: all 0.4s ease;
-            z-index: 100;
-            animation: sunPulse 4s infinite;
-        }
-
-        @keyframes sunPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .sun:hover {
-            transform: scale(1.15) !important;
-            box-shadow: 0 0 100px #ffa500, 0 0 150px #ff6347, 0 0 200px #ff4500;
-        }
-
-        .sun.active {
-            box-shadow: 0 0 120px #ffa500, 0 0 180px #ff6347, 0 0 240px #ff4500;
-        }
-
-        .orbit {
-            position: absolute;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 50%;
-            pointer-events: none;
-        }
-
-        .planet-container {
-            position: absolute;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .planet-container:hover {
-            transform: scale(1.2);
-            z-index: 50;
-        }
-
-        .planet-container.active {
-            transform: scale(1.3);
-            z-index: 60;
-        }
-
-        .planet {
-            border-radius: 50%;
-            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.5);
-            position: relative;
-            background-size: cover !important;
-            background-position: center !important;
-        }
-
-        .planet-label {
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.75rem;
-            white-space: nowrap;
-            color: #a5b4fc;
-            text-shadow: 0 0 10px rgba(165,180,252,0.5);
-            pointer-events: none;
-        }
-
-        .planet-glow {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 130%;
-            height: 130%;
-            border-radius: 50%;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .planet-container.active .planet-glow {
-            opacity: 0.6;
-        }
-
-        /* Individual Planet Styles */
-        .mercury { 
-            width: 20px; 
-            height: 20px;
-            background: radial-gradient(circle at 30% 30%, #c8c8c8, #a0a0a0, #7a7a7a, #5a5a5a);
-            box-shadow: inset -3px -3px 8px rgba(0,0,0,0.6), 0 0 15px rgba(200,200,200,0.3);
-        }
-        .mercury-glow { background: radial-gradient(circle, rgba(184,184,184,0.6), transparent); }
-
-        .venus { 
-            width: 28px; 
-            height: 28px;
-            background: radial-gradient(circle at 30% 30%, #fff5e1, #ffe4b3, #ffd89b, #ffcb7a, #e8a558);
-            box-shadow: inset -3px -3px 10px rgba(0,0,0,0.4), 0 0 20px rgba(255,203,110,0.4);
-        }
-        .venus-glow { background: radial-gradient(circle, rgba(253,203,110,0.6), transparent); }
-
-        .earth { 
-            width: 30px; 
-            height: 30px;
-            background: 
-                radial-gradient(circle at 35% 40%, 
-                    rgba(255,255,255,0.3) 0%, transparent 30%),
-                radial-gradient(circle at 30% 30%, #a8daff, #74b9ff, #4a9eff, #2e86de, #1e5f99, #0a3d62);
-            box-shadow: inset -4px -4px 12px rgba(0,0,0,0.5), 0 0 25px rgba(116,185,255,0.4);
-            position: relative;
-        }
-        .earth::before {
-            content: '';
-            position: absolute;
-            width: 40%;
-            height: 60%;
-            background: radial-gradient(ellipse, #00b894 20%, transparent 70%);
-            top: 20%;
-            left: 50%;
-            border-radius: 50%;
-            opacity: 0.8;
-        }
-        .earth-glow { background: radial-gradient(circle, rgba(116,185,255,0.6), transparent); }
-
-        .mars { 
-            width: 24px; 
-            height: 24px;
-            background: radial-gradient(circle at 35% 35%, #ff9b8a, #ff7675, #ee5a52, #d63031, #a82a2a);
-            box-shadow: inset -3px -3px 10px rgba(0,0,0,0.5), 0 0 18px rgba(255,118,117,0.3);
-        }
-        .mars-glow { background: radial-gradient(circle, rgba(255,118,117,0.6), transparent); }
-
-        .jupiter { 
-            width: 70px; 
-            height: 70px;
-            background: 
-                radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2) 0%, transparent 40%),
-                linear-gradient(180deg, 
-                    #f9ca24 0%, #f9ca24 12%,
-                    #e8b44f 12%, #e8b44f 20%,
-                    #ffeaa7 20%, #ffeaa7 28%,
-                    #e17055 28%, #e17055 38%,
-                    #fab1a0 38%, #fab1a0 48%,
-                    #f9ca24 48%, #f9ca24 58%,
-                    #d4915e 58%, #d4915e 68%,
-                    #ffeaa7 68%, #ffeaa7 78%,
-                    #e8b44f 78%, #e8b44f 88%,
-                    #f9ca24 88%, #f9ca24 100%);
-            border-radius: 50%;
-            box-shadow: inset -6px -6px 20px rgba(0,0,0,0.4), 0 0 30px rgba(249,202,36,0.4);
-        }
-        .jupiter::after {
-            content: '';
-            position: absolute;
-            width: 25%;
-            height: 30%;
-            background: radial-gradient(ellipse, rgba(255,100,80,0.6), rgba(220,80,60,0.4));
-            top: 35%;
-            left: 25%;
-            border-radius: 50%;
-            filter: blur(2px);
-        }
-        .jupiter-glow { background: radial-gradient(circle, rgba(249,202,36,0.6), transparent); }
-
-        .saturn { 
-            width: 60px; 
-            height: 60px;
-            background: 
-                radial-gradient(circle at 32% 32%, rgba(255,255,255,0.3) 0%, transparent 40%),
-                radial-gradient(circle at 30% 30%, #fffbea, #ffeaa7, #ffd97d, #fdcb6e, #e1a85f, #c89550);
-            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.4), 0 0 25px rgba(253,203,110,0.3);
-        }
-        .saturn::after {
-            content: '';
-            position: absolute;
-            width: 110px;
-            height: 22px;
-            background: 
-                linear-gradient(90deg, 
-                    transparent 0%, 
-                    rgba(253,203,110,0.3) 15%,
-                    rgba(253,203,110,0.5) 30%,
-                    rgba(253,203,110,0.6) 50%,
-                    rgba(253,203,110,0.5) 70%,
-                    rgba(253,203,110,0.3) 85%,
-                    transparent 100%);
-            border: 2px solid rgba(253,203,110,0.4);
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotateX(75deg);
-            box-shadow: 0 0 15px rgba(253,203,110,0.4), inset 0 0 10px rgba(0,0,0,0.3);
-        }
-        .saturn-glow { background: radial-gradient(circle, rgba(253,203,110,0.6), transparent); }
-
-        .uranus { 
-            width: 45px; 
-            height: 45px;
-            background: 
-                radial-gradient(circle at 33% 33%, rgba(255,255,255,0.2) 0%, transparent 40%),
-                radial-gradient(circle at 30% 30%, #b2f5ea, #81ecec, #54d6d6, #00cec9, #00a8a8, #008c8c);
-            box-shadow: inset -4px -4px 12px rgba(0,0,0,0.4), 0 0 22px rgba(129,236,236,0.4);
-        }
-        .uranus-glow { background: radial-gradient(circle, rgba(129,236,236,0.6), transparent); }
-
-        .neptune { 
-            width: 44px; 
-            height: 44px;
-            background: 
-                radial-gradient(circle at 33% 33%, rgba(255,255,255,0.15) 0%, transparent 35%),
-                radial-gradient(circle at 30% 30%, #6c9fff, #5584ff, #4a73e8, #3867d6, #2e5bbf, #1e3a8a);
-            box-shadow: inset -4px -4px 12px rgba(0,0,0,0.5), 0 0 22px rgba(116,185,255,0.4);
-        }
-        .neptune-glow { background: radial-gradient(circle, rgba(116,185,255,0.6), transparent); }
-
-        .visualization-area {
-            position: relative;
-            background: rgba(10,10,25,0.8);
-            border: 2px solid rgba(165,180,252,0.2);
-            border-radius: 20px;
-            padding: 2rem;
-            backdrop-filter: blur(10px);
-            margin-top: 2rem;
-        }
-
-        .vis-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .vis-title {
-            font-size: 1.5rem;
-            color: #c4b5fd;
-            letter-spacing: 0.1rem;
-        }
-
-        .controls {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .btn {
-            padding: 0.6rem 1.2rem;
-            border: 2px solid rgba(165,180,252,0.4);
-            border-radius: 10px;
-            background: rgba(30,30,50,0.8);
-            color: #c4b5fd;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-        }
-
-        .btn:hover {
-            border-color: #fbbf24;
-            color: #fbbf24;
-            box-shadow: 0 0 20px rgba(251,191,36,0.3);
-        }
-
-        #waveCanvas {
-            width: 100%;
-            height: 500px;
-            border-radius: 15px;
-            background: radial-gradient(ellipse at center, rgba(20,20,40,0.9) 0%, rgba(10,10,20,0.95) 100%);
-        }
-
-        .active-sounds {
-            margin-top: 1.5rem;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .sound-tag {
-            padding: 0.6rem 1.2rem;
-            background: rgba(196,181,253,0.15);
-            border: 2px solid rgba(196,181,253,0.3);
-            border-radius: 20px;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            color: #c4b5fd;
-            transition: all 0.3s ease;
-        }
-
-        .sound-indicator {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.3); }
-        }
-
-        .remove-sound {
-            cursor: pointer;
-            opacity: 0.7;
-            margin-left: 0.5rem;
-        }
-
-        .remove-sound:hover {
-            opacity: 1;
-            color: #fbbf24;
-        }
-
-        .info-panel {
-            text-align: center;
-            padding: 1.5rem;
-            background: rgba(165,180,252,0.05);
-            border-radius: 10px;
-            color: #a5b4fc;
-            font-size: 0.95rem;
-            margin-top: 1.5rem;
-            line-height: 1.6;
-        }
-
-        @media (max-width: 1024px) {
-            .solar-system { height: 400px; }
-            .sun { width: 80px; height: 80px; }
-            .jupiter { width: 50px; height: 50px; }
-            .saturn { width: 45px; height: 45px; }
-            .uranus { width: 35px; height: 35px; }
-            .neptune { width: 34px; height: 34px; }
-        }
-    </style>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Age Calculator</title>
+	<style>
+		:root{
+			--bg:#f7fafc; --card:#ffffff; --accent:#2563eb; --muted:#6b7280; --radius:12px;
+			--max-width:800px;
+			--shadow: 0 6px 18px rgba(16,24,40,0.08);
+		}
+		*{box-sizing:border-box}
+		body{font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:var(--bg);color:#0f172a;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:32px}
+		.wrap{width:100%;max-width:var(--max-width)}
+		header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+		header h1{font-size:1.25rem;margin:0}
+		.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px}
+		label{display:block;font-weight:600;margin-bottom:8px}
+		.muted{color:var(--muted);font-weight:400}
+		.form-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+		input[type="date"], input[type="text"]{padding:10px 12px;border-radius:8px;border:1px solid #e6edf3;background:#fff;min-width:220px}
+		button{background:var(--accent);color:#fff;border:0;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+		button.secondary{background:#e6eefc;color:var(--accent)}
+		.result{margin-top:18px;padding:16px;border-radius:10px;background:linear-gradient(180deg,rgba(37,99,235,0.06),transparent);font-weight:700}
+		.small{font-size:0.9rem;color:var(--muted)}
+		footer{margin-top:14px;text-align:center;color:var(--muted);font-size:0.85rem}
+		@media (max-width:520px){body{padding:18px}.form-row{flex-direction:column;align-items:stretch}input[type="date"]{width:100%}}
+	</style>
 </head>
 <body>
     <div class="stars" id="stars"></div>
@@ -427,12 +36,40 @@
         <p class="subtitle">AI-Powered Sonic Geometry from the Solar System</p>
     </header>
 
-    <div class="container">
-        <div class="solar-system" id="solarSystem">
-            <div class="sun" onclick="toggleCelestial(0)" data-name="Sun" id="sunElement">
-                <div class="planet-label">SUN</div>
-            </div>
-        </div>
+		<main class="card" role="main">
+				<form id="ageForm" onsubmit="return false;" aria-label="Age calculator form">
+					<div>
+						<label for="birthdate">Your birthdate</label>
+						<input id="birthdate" name="birthdate" type="date" aria-required="true" max="9999-12-31">
+						<div class="small muted">Choose your birthdate using the picker. If you prefer, type YYYY-MM-DD.</div>
+					</div>
+
+					<div class="form-row" style="margin-top:14px">
+						<button id="calcBtn" type="button">Calculate age</button>
+						<button id="clearBtn" type="button" class="secondary">Clear</button>
+					</div>
+
+					<div id="output" class="result" aria-live="polite" style="display:none"></div>
+				</form>
+
+			<!-- NASA API integration card -->
+			<section id="nasa" style="margin-top:20px">
+				<h2 style="margin:0 0 12px 0;font-size:1.05rem">NASA API Explorer</h2>
+				<div class="small muted" style="margin-bottom:10px">Use the DEMO_KEY or paste your own NASA API key. Choose an endpoint and fetch data. <a href="https://github.com/nasa/apod-api" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:600">NASA APOD API ↗</a></div>					<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end">
+						<div>
+							<label for="apiKey">NASA API Key</label>
+							<input id="apiKey" placeholder="DEMO_KEY or your api key" value="DEMO_KEY" />
+						</div>
+
+						<div>
+							<label for="endpoint">Endpoint</label>
+							<select id="endpoint">
+								<option value="apod">APOD (Astronomy Picture of the Day)</option>
+								<option value="mars-photos">Mars Rover Photos (Curiosity)</option>
+								<option value="custom">Custom full URL</option>
+							</select>
+						</div>
+					</div>
 
         <div class="visualization-area">
             <div class="vis-header">
@@ -454,429 +91,438 @@
         </div>
     </div>
 
-    <script>
-        const celestialData = [
-            { name: 'Sun', frequency: 126.22, color: '#ff8c00', info: 'Solar oscillations', image: '' },
-            { name: 'Mercury', frequency: 144.72, color: '#b8b8b8', info: 'Solar wind interactions', image: '' },
-            { name: 'Venus', frequency: 221.23, color: '#fdcb6e', info: 'Atmospheric radio emissions', image: '' },
-            { name: 'Earth', frequency: 194.18, color: '#74b9ff', info: 'Magnetospheric chorus', image: '' },
-            { name: 'Mars', frequency: 144.72, color: '#ff7675', info: 'Wind and atmospheric pressure', image: '' },
-            { name: 'Jupiter', frequency: 183.58, color: '#f9ca24', info: 'Radio emissions and auroras', image: '' },
-            { name: 'Saturn', frequency: 147.85, color: '#fdcb6e', info: 'Kilometric radiation', image: '' },
-            { name: 'Uranus', frequency: 207.36, color: '#81ecec', info: 'Magnetic field oscillations', image: '' },
-            { name: 'Neptune', frequency: 211.44, color: '#74b9ff', info: 'Plasma wave emissions', image: '' }
-        ];
+	<script>
+		// Calculate age in years, months, days from birthdate (yyyy-mm-dd)
+		const birthInput = document.getElementById('birthdate');
+		const calcBtn = document.getElementById('calcBtn');
+		const clearBtn = document.getElementById('clearBtn');
+		const output = document.getElementById('output');
 
-        // CUSTOM IMAGES: Add your planet image URLs here!
-        // Example: 'images/mercury.png' if stored in GitHub repo
-        // Or full URL: 'https://yoursite.com/mercury.png'
-        const customImages = {
-            'Sun': '',        // Leave empty to use default gradient, or add: 'images/sun.png'
-            'Mercury': '',    // Add: 'images/mercury.png'
-            'Venus': '',      // Add: 'images/venus.png'
-            'Earth': '',      // Add: 'images/earth.png'
-            'Mars': '',       // Add: 'images/mars.png'
-            'Jupiter': '',    // Add: 'images/jupiter.png'
-            'Saturn': '',     // Add: 'images/saturn.png'
-            'Uranus': '',     // Add: 'images/uranus.png'
-            'Neptune': ''     // Add: 'images/neptune.png'
-        };
+		function showMessage(html){
+			output.innerHTML = html;
+			output.style.display = html ? 'block' : 'none';
+		}
 
-        const orbits = [
-            { distance: 90, planets: [1] },
-            { distance: 130, planets: [2] },
-            { distance: 170, planets: [3] },
-            { distance: 215, planets: [4] },
-            { distance: 310, planets: [5] },
-            { distance: 390, planets: [6] },
-            { distance: 460, planets: [7] },
-            { distance: 520, planets: [8] }
-        ];
+		function parseDateFromInput(value){
+			// value is expected as YYYY-MM-DD
+			if(!value) return null;
+			const parts = value.split('-').map(Number);
+			if(parts.length !== 3) return null;
+			const [y,m,d] = parts;
+			// months are 1-12
+			if(!y || !m || !d) return null;
+			return new Date(Date.UTC(y, m-1, d));
+		}
 
-        let canvas, ctx, audioContext;
-        let activeSounds = [];
-        let geometricMode = true;
-        let animationId;
+		function calculateAge(birthDate, now = new Date()){
+			if(!(birthDate instanceof Date)) return null;
+			// Use local now but ensure birthDate timezone-neutral by using UTC day math
+			const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+			const b = new Date(birthDate.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+			if(b > today) return null;
 
-        function init() {
-            // Create starfield
-            const starsContainer = document.getElementById('stars');
-            for (let i = 0; i < 200; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                star.style.left = Math.random() * 100 + '%';
-                star.style.top = Math.random() * 100 + '%';
-                star.style.animationDelay = Math.random() * 3 + 's';
-                starsContainer.appendChild(star);
-            }
+			let years = today.getFullYear() - b.getFullYear();
+			let months = today.getMonth() - b.getMonth();
+			let days = today.getDate() - b.getDate();
 
-            // Create solar system
-            const solarSystem = document.getElementById('solarSystem');
-            
-            // Apply custom sun image if provided
-            const sunElement = document.getElementById('sunElement');
-            const customSunImage = customImages['Sun'];
-            if (customSunImage && customSunImage.trim() !== '') {
-                sunElement.style.background = `url('${customSunImage}')`;
-                sunElement.style.backgroundSize = 'cover';
-                sunElement.style.backgroundPosition = 'center';
-            }
-            
-            orbits.forEach(orbit => {
-                const orbitEl = document.createElement('div');
-                orbitEl.className = 'orbit';
-                orbitEl.style.width = orbit.distance * 2 + 'px';
-                orbitEl.style.height = orbit.distance * 2 + 'px';
-                solarSystem.appendChild(orbitEl);
+			if(days < 0){
+				// borrow days from previous month
+				const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0); // last day of previous month
+				days += prevMonth.getDate();
+				months -= 1;
+			}
+			if(months < 0){
+				months += 12;
+				years -= 1;
+			}
+			return {years, months, days};
+		}
 
-                orbit.planets.forEach(planetIndex => {
-                    const angle = (Math.random() * 360) * Math.PI / 180;
-                    const x = Math.cos(angle) * orbit.distance;
-                    const y = Math.sin(angle) * orbit.distance;
+		function formatAge(a){
+			if(!a) return '';
+			const parts = [];
+			if(a.years) parts.push(a.years + (a.years === 1 ? ' year' : ' years'));
+			if(a.months) parts.push(a.months + (a.months === 1 ? ' month' : ' months'));
+			if(a.days || parts.length === 0) parts.push(a.days + (a.days === 1 ? ' day' : ' days'));
+			return parts.join(', ');
+		}
 
-                    const container = document.createElement('div');
-                    container.className = 'planet-container';
-                    container.style.left = `calc(50% + ${x}px)`;
-                    container.style.top = `calc(50% + ${y}px)`;
-                    container.style.transform = 'translate(-50%, -50%)';
-                    container.onclick = () => toggleCelestial(planetIndex);
+		function onCalculate(){
+			const val = birthInput.value.trim();
+			if(!val){
+				showMessage('<span style="color:#b91c1c;font-weight:700">Please enter your birthdate.</span>');
+				return;
+			}
+			const bd = parseDateFromInput(val);
+			if(!bd){
+				showMessage('<span style="color:#b91c1c;font-weight:700">Invalid date format. Use YYYY-MM-DD.</span>');
+				return;
+			}
+			const age = calculateAge(bd);
+			if(!age){
+				showMessage('<span style="color:#b91c1c;font-weight:700">Birthdate is in the future. Please enter a valid past date.</span>');
+				return;
+			}
+			const formatted = formatAge(age);
+			showMessage(`<div>You're <span style="color:var(--accent)">${formatted}</span>.</div>`);
+		}
 
-                    const planetName = celestialData[planetIndex].name.toLowerCase();
-                    const customImage = customImages[celestialData[planetIndex].name];
-                    
-                    // Create planet div with custom image if provided
-                    const planetDiv = document.createElement('div');
-                    planetDiv.className = `planet ${planetName}`;
-                    
-                    // Apply custom image if URL is provided
-                    if (customImage && customImage.trim() !== '') {
-                        planetDiv.style.background = `url('${customImage}')`;
-                        planetDiv.style.backgroundSize = 'cover';
-                        planetDiv.style.backgroundPosition = 'center';
-                    }
+		calcBtn.addEventListener('click', onCalculate);
+		clearBtn.addEventListener('click', ()=>{ birthInput.value=''; showMessage(''); birthInput.focus(); });
 
-                    container.innerHTML = `
-                        <div class="planet-glow ${planetName}-glow"></div>
-                        <div class="planet-label">${celestialData[planetIndex].name.toUpperCase()}</div>
-                    `;
-                    
-                    container.insertBefore(planetDiv, container.querySelector('.planet-label'));
+		// allow Enter key to submit when focused on the date input
+		birthInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ onCalculate(); e.preventDefault(); } });
 
-                    solarSystem.appendChild(container);
-                });
-            });
+			// ---------- NASA API explorer logic ----------
+			const apiKeyInput = document.getElementById('apiKey');
+			const endpointSelect = document.getElementById('endpoint');
+			const paramsContainer = document.getElementById('params');
+			const fetchBtn = document.getElementById('fetchBtn');
+			const clearNasaBtn = document.getElementById('clearNasaBtn');
+			const nasaOutput = document.getElementById('nasaOutput');
+			const nasaContent = document.getElementById('nasaContent');
+			const rawJson = document.getElementById('rawJson');
 
-            // Setup canvas
-            canvas = document.getElementById('waveCanvas');
-            ctx = canvas.getContext('2d');
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
+			function showNasaResult(html, json){
+				nasaContent.innerHTML = html || '';
+				rawJson.textContent = json ? JSON.stringify(json, null, 2) : '';
+				nasaOutput.style.display = html || json ? 'block' : 'none';
+			}
 
-            startVisualization();
-        }
+			function setParamVisibility(){
+				const val = endpointSelect.value;
+				Array.from(paramsContainer.querySelectorAll('[data-for]')).forEach(el=>{
+					el.style.display = el.getAttribute('data-for') === val ? 'block' : 'none';
+				});
+			}
+			endpointSelect.addEventListener('change', setParamVisibility);
+			setParamVisibility();
 
-        async function toggleCelestial(index) {
-            const body = celestialData[index];
-            const existingIndex = activeSounds.findIndex(s => s.name === body.name);
+			function buildUrl(){
+				const key = (apiKeyInput.value || '').trim();
+				const ep = endpointSelect.value;
+				if(ep === 'apod'){
+					const date = document.getElementById('apodDate').value;
+					let url = new URL('https://api.nasa.gov/planetary/apod');
+					if(date) url.searchParams.set('date', date);
+					url.searchParams.set('api_key', key || 'DEMO_KEY');
+					return url.toString();
+				}
+				if(ep === 'mars-photos'){
+					const solVal = document.getElementById('sol').value;
+					const earthDate = document.getElementById('earthDate').value;
+					let url = new URL('https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos');
+					if(solVal) url.searchParams.set('sol', solVal);
+					else if(earthDate) url.searchParams.set('earth_date', earthDate);
+					else url.searchParams.set('sol', '1000');
+					url.searchParams.set('api_key', key || 'DEMO_KEY');
+					return url.toString();
+				}
+				if(ep === 'custom'){
+					const u = (document.getElementById('customUrl').value || '').trim();
+					if(!u) return null;
+					try{
+						const url = new URL(u);
+						if(!url.searchParams.has('api_key') && key) url.searchParams.set('api_key', key);
+						return url.toString();
+					}catch(e){
+						return null;
+					}
+				}
+				return null;
+			}
 
-            if (existingIndex !== -1) {
-                activeSounds[existingIndex].oscillator.stop();
-                activeSounds[existingIndex].lfo.stop();
-                activeSounds.splice(existingIndex, 1);
-                
-                if (index === 0) {
-                    document.querySelector('.sun').classList.remove('active');
-                } else {
-                    document.querySelectorAll('.planet-container')[index - 1].classList.remove('active');
-                }
-            } else {
-                if (!audioContext) {
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                }
+			async function fetchNasa(){
+				const url = buildUrl();
+				if(!url){
+					showNasaResult('<span style="color:#b91c1c;font-weight:700">Please provide a valid URL or parameters.</span>', null);
+					return;
+				}
+				showNasaResult('<em>Fetching...</em>', null);
+				try{
+					const res = await fetch(url);
+					if(!res.ok){
+						const txt = await res.text();
+						showNasaResult(`<span style="color:#b91c1c;font-weight:700">Request failed: ${res.status} ${res.statusText}</span>`, {status:res.status, body:txt});
+						return;
+					}
+					const data = await res.json();
+					// handle APOD
+					if(endpointSelect.value === 'apod'){
+						let html = '';
+						if(data.media_type === 'image'){
+							html = `<figure style="margin:0"><img src="${data.url}" alt="APOD" style="max-width:100%;border-radius:8px;display:block;margin-bottom:8px"/><figcaption class="small muted">${escapeHtml(data.title || '')}</figcaption></figure><div class="small" style="margin-top:8px">${escapeHtml(data.explanation || '')}</div>`;
+						}else if(data.media_type === 'video'){
+							html = `<div style="aspect-ratio:16/9"><iframe src="${data.url}" frameborder="0" allowfullscreen style="width:100%;height:100%"></iframe></div><div class="small" style="margin-top:8px">${escapeHtml(data.title || '')}</div><div class="small">${escapeHtml(data.explanation || '')}</div>`;
+						}else{
+							html = `<pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+						}
+						showNasaResult(html, data);
+						return;
+					}
 
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                const analyser = audioContext.createAnalyser();
-                
-                analyser.fftSize = 2048;
-                
-                oscillator.type = 'sine';
-                oscillator.frequency.value = body.frequency;
-                
-                const lfo = audioContext.createOscillator();
-                lfo.frequency.value = 0.2 + Math.random() * 0.3;
-                const lfoGain = audioContext.createGain();
-                lfoGain.gain.value = 10 + Math.random() * 15;
-                
-                lfo.connect(lfoGain);
-                lfoGain.connect(oscillator.frequency);
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(analyser);
-                analyser.connect(audioContext.destination);
-                
-                gainNode.gain.value = 0.12;
-                
-                oscillator.start();
-                lfo.start();
+					// handle Mars photos
+					if(endpointSelect.value === 'mars-photos'){
+						const photos = data.photos || [];
+						if(photos.length === 0){
+							showNasaResult('<div>No photos found for the chosen parameters.</div>', data);
+							return;
+						}
+						const list = photos.slice(0,6).map(p=>`<div style="flex:1 1 30%;min-width:120px"><img src="${p.img_src}" alt="Mars photo" style="width:100%;height:auto;border-radius:8px;display:block"/><div class="small muted">${escapeHtml(p.camera.full_name)} — ${escapeHtml(p.earth_date)}</div></div>`).join('');
+						const html = `<div style="display:flex;gap:8px;flex-wrap:wrap">${list}</div>`;
+						showNasaResult(html, data);
+						return;
+					}
 
-                activeSounds.push({
-                    name: body.name,
-                    color: body.color,
-                    analyser: analyser,
-                    oscillator: oscillator,
-                    lfo: lfo,
-                    frequency: body.frequency,
-                    phase: Math.random() * Math.PI * 2
-                });
+					// fallback: show the data
+					showNasaResult(`<pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>`, data);
+				}catch(err){
+					showNasaResult(`<span style="color:#b91c1c;font-weight:700">Network or parsing error: ${escapeHtml(err.message || String(err))}</span>`, null);
+				}
+			}
 
-                if (index === 0) {
-                    document.querySelector('.sun').classList.add('active');
-                } else {
-                    document.querySelectorAll('.planet-container')[index - 1].classList.add('active');
-                }
-            }
+			fetchBtn.addEventListener('click', fetchNasa);
+			clearNasaBtn.addEventListener('click', ()=>{ showNasaResult('', null); });
 
-            updateSoundDisplay();
-        }
+			function escapeHtml(s){
+				return String(s || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+			}
+	</script>
+</body>
+</html>
 
-        function updateSoundDisplay() {
-            const container = document.getElementById('activeSounds');
-            container.innerHTML = activeSounds.map((sound, i) => `
-                <div class="sound-tag">
-                    <div class="sound-indicator" style="background: ${sound.color};"></div>
-                    ${sound.name}
-                    <span class="remove-sound" onclick="toggleCelestial(${celestialData.findIndex(b => b.name === sound.name)})">✕</span>
-                </div>
-            `).join('');
-        }
+			// ---------- Milky Way Sound Mixer (WebAudio) ----------
+			const addSineBtn = document.getElementById('addSine');
+			const fileInput = document.getElementById('fileInput');
+			const trackList = document.getElementById('trackList');
+			const playAll = document.getElementById('playAll');
+			const pauseAll = document.getElementById('pauseAll');
+			const stopAll = document.getElementById('stopAll');
+			const canvas = document.getElementById('viz');
+			const ctx = canvas.getContext('2d');
 
-        function startVisualization() {
-            const bufferLength = 1024;
+			let audioCtx = null;
+			const tracks = []; // {id, name, type, node, gain, sourceForOneShot?, playing, solo, buffer}
+			const master = {gainNode: null, analyser: null};
 
-            function draw() {
-                animationId = requestAnimationFrame(draw);
+			function ensureAudioContext(){
+				if(!audioCtx){
+					audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+					master.gainNode = audioCtx.createGain();
+					master.gainNode.gain.value = 0.9;
+					master.analyser = audioCtx.createAnalyser();
+					master.analyser.fftSize = 2048;
+					master.gainNode.connect(master.analyser);
+					master.analyser.connect(audioCtx.destination);
+				}
+			}
 
-                ctx.fillStyle = 'rgba(10, 10, 20, 0.08)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+			function addSynthTrack(){
+				ensureAudioContext();
+				const id = crypto ? crypto.randomUUID() : String(Date.now());
+				const gain = audioCtx.createGain();
+				gain.gain.value = 0.7;
+				gain.connect(master.gainNode);
 
-                const centerX = canvas.width / 2;
-                const centerY = canvas.height / 2;
-                const time = Date.now() * 0.0005;
+				// create an oscillator + slow LFO for a spacey feel
+				const osc = audioCtx.createOscillator();
+				osc.type = 'sine';
+				const freq = 110 + Math.round(Math.random()*800);
+				osc.frequency.value = freq;
 
-                activeSounds.forEach((sound, soundIndex) => {
-                    const dataArray = new Uint8Array(bufferLength);
-                    sound.analyser.getByteTimeDomainData(dataArray);
+				const lfo = audioCtx.createOscillator();
+				lfo.type = 'sine';
+				lfo.frequency.value = 0.05 + Math.random()*0.5; // slow
+				const lfoGain = audioCtx.createGain();
+				lfoGain.gain.value = 60 + Math.random()*120;
+				lfo.connect(lfoGain);
+				lfoGain.connect(osc.frequency);
 
-                    ctx.strokeStyle = sound.color;
-                    ctx.lineWidth = 2;
-                    ctx.globalAlpha = 0.7;
+				osc.connect(gain);
 
-                    if (geometricMode) {
-                        // Unique visualization for each celestial body
-                        switch(sound.name) {
-                            case 'Sun':
-                                // Explosive radial bursts
-                                for (let burst = 0; burst < 12; burst++) {
-                                    const burstAngle = (burst / 12) * Math.PI * 2 + time;
-                                    ctx.beginPath();
-                                    for (let i = 0; i < 100; i++) {
-                                        const t = i / 100;
-                                        const dataIndex = Math.floor(t * bufferLength);
-                                        const value = (dataArray[dataIndex] - 128) / 128;
-                                        const r = 50 + t * 180 + value * 70 + Math.sin(time * 3 + t * 5) * 30;
-                                        const a = burstAngle + t * 0.3;
-                                        const x = centerX + Math.cos(a) * r;
-                                        const y = centerY + Math.sin(a) * r;
-                                        if (i === 0) ctx.moveTo(x, y);
-                                        else ctx.lineTo(x, y);
-                                    }
-                                    ctx.strokeStyle = sound.color + '99';
-                                    ctx.stroke();
-                                }
-                                break;
+				// start immediately but keep playing state controlled by gain
+				osc.start();
+				lfo.start();
 
-                            case 'Mercury':
-                                // Fast, jittery orbits
-                                for (let orbit = 0; orbit < 5; orbit++) {
-                                    ctx.beginPath();
-                                    for (let i = 0; i < bufferLength; i += 2) {
-                                        const angle = (i / bufferLength) * Math.PI * 2 + time * 2;
-                                        const value = (dataArray[i] - 128) / 128;
-                                        const jitter = Math.sin(i * 0.3 + time * 5) * 15;
-                                        const r = 100 + orbit * 25 + value * 50 + jitter;
-                                        const x = centerX + Math.cos(angle) * r;
-                                        const y = centerY + Math.sin(angle) * r;
-                                        if (i === 0) ctx.moveTo(x, y);
-                                        else ctx.lineTo(x, y);
-                                    }
-                                    ctx.closePath();
-                                    ctx.strokeStyle = sound.color + '88';
-                                    ctx.stroke();
-                                }
-                                break;
+				const track = {id, name:`Synth ${tracks.length+1}`, type:'synth', oscillator:osc, lfo, lfoGain, gainNode:gain, playing:false, solo:false};
+				tracks.push(track);
+				renderTrack(track);
+			}
 
-                            case 'Venus':
-                                // Thick, swirling atmospheric patterns
-                                for (let swirl = 0; swirl < 8; swirl++) {
-                                    ctx.beginPath();
-                                    for (let i = 0; i < bufferLength; i += 3) {
-                                        const t = i / bufferLength;
-                                        const value = (dataArray[i] - 128) / 128;
-                                        const angle = t * Math.PI * 4 + time * 0.5 + (swirl * Math.PI / 4);
-                                        const r = 120 + value * 90 + Math.sin(t * 8 + time * 2) * 40;
-                                        const x = centerX + Math.cos(angle) * r + Math.sin(time + swirl) * 30;
-                                        const y = centerY + Math.sin(angle) * r + Math.cos(time + swirl) * 30;
-                                        if (i === 0) ctx.moveTo(x, y);
-                                        else ctx.lineTo(x, y);
-                                    }
-                                    ctx.strokeStyle = sound.color + '77';
-                                    ctx.stroke();
-                                }
-                                break;
+			async function addFileTrack(file){
+				ensureAudioContext();
+				const id = crypto ? crypto.randomUUID() : String(Date.now());
+				const gain = audioCtx.createGain();
+				gain.gain.value = 0.9;
+				gain.connect(master.gainNode);
 
-                            case 'Earth':
-                                // Harmonious waves like ocean and wind
-                                for (let wave = 0; wave < 6; wave++) {
-                                    ctx.beginPath();
-                                    for (let i = 0; i < bufferLength; i += 1) {
-                                        const angle = (i / bufferLength) * Math.PI * 2;
-                                        const value = (dataArray[i] - 128) / 128;
-                                        const r = 130 + wave * 30 + value * 60 + Math.sin(i * 0.15 + time * 2 + wave) * 25;
-                                        const x = centerX + Math.cos(angle + time * 0.3) * r;
-                                        const y = centerY + Math.sin(angle + time * 0.3) * r;
-                                        if (i === 0) ctx.moveTo(x, y);
-                                        else ctx.lineTo(x, y);
-                                    }
-                                    ctx.closePath();
-                                    ctx.strokeStyle = sound.color + 'aa';
-                                    ctx.stroke();
-                                }
-                                break;
+				const array = await file.arrayBuffer();
+				const buffer = await audioCtx.decodeAudioData(array);
+				const track = {id, name:file.name, type:'file', buffer, gainNode:gain, playing:false, solo:false, source:null};
+				tracks.push(track);
+				renderTrack(track);
+			}
 
-                            case 'Mars':
-                                // Angular, crystalline structures
-                                for (let crystal = 0; crystal < 8; crystal++) {
-                                    const baseAngle = (crystal / 8) * Math.PI * 2 + time * 0.4;
-                                    ctx.beginPath();
-                                    for (let i = 0; i < 50; i++) {
-                                        const dataIndex = Math.floor((i / 50) * bufferLength);
-                                        const value = (dataArray[dataIndex] - 128) / 128;
-                                        const r = 100 + i * 3 + value * 60;
-                                        const angleOffset = i % 2 === 0 ? 0.1 : -0.1;
-                                        const a = baseAngle + angleOffset;
-                                        const x = centerX + Math.cos(a) * r;
-                                        const y = centerY + Math.sin(a) * r;
-                                        if (i === 0) ctx.moveTo(x, y);
-                                        else ctx.lineTo(x, y);
-                                    }
-                                    ctx.strokeStyle = sound.color + '99';
-                                    ctx.stroke();
-                                }
-                                break;
+			function renderTrack(track){
+				const item = document.createElement('div');
+				item.style.display = 'flex';
+				item.style.gap = '8px';
+				item.style.alignItems = 'center';
+				item.style.padding = '8px';
+				item.style.border = '1px solid #e6edf3';
+				item.style.borderRadius = '8px';
+				item.id = 'track-'+track.id;
 
-                            case 'Jupiter':
-                                // Massive, complex storm patterns
-                                for (let storm = 0; storm < 4; storm++) {
-                                    ctx.beginPath();
-                                    for (let i = 0; i < bufferLength; i += 2) {
-                                        const t = i / bufferLength;
-                                        const value = (dataArray[i] - 128) / 128;
-                                        const angle = t * Math.PI * 6 + time * 0.4 + (storm * Math.PI / 2);
-                                        const wobble = Math.sin(t * 12 + time * 2 + storm) * 50;
-                                        const r = 150 + t * 120 + value * 80 + wobble;
-                                        const x = centerX + Math.cos(angle) * r;
-                                        const y = centerY + Math.sin(angle) * r;
-                                        if (i === 0) ctx.moveTo(x, y);
-                                        else ctx.lineTo(x, y);
-                                    }
-                                    ctx.strokeStyle = sound.color + '88';
-                                    ctx.lineWidth = 3;
-                                    ctx.stroke();
-                                    ctx.lineWidth = 2;
-                                }
-                                break;
+				const title = document.createElement('div');
+				title.style.flex = '1';
+				title.innerHTML = `<strong>${escapeHtml(track.name)}</strong><div class="small muted">${escapeHtml(track.type)}</div>`;
 
-                            case 'Saturn':
-                                // Elegant rings with gaps
-                                for (let ring = 0; ring < 10; ring++) {
-                                    if (ring === 4 || ring === 7) continue; // Cassini division gaps
-                                    ctx.beginPath();
-                                    for (let i = 0; i < bufferLength; i += 1) {
-                                        const angle = (i / bufferLength) * Math.PI * 2 + time * 0.2;
-                                        const value = (dataArray[i] - 128) / 128;
-                                        const r = 110 + ring * 18 + value * 30;
-                                        const x = centerX + Math.cos(angle) * r;
-                                        const y = centerY + Math.sin(angle) * r * 0.6; // Elliptical
-                                        if (i === 0) ctx.moveTo(x, y);
-                                        else ctx.lineTo(x, y);
-                                    }
-                                    ctx.closePath();
-                                    ctx.strokeStyle = sound.color + (70 + ring * 10).toString(16);
-                                    ctx.stroke();
-                                }
-                                break;
+				const vol = document.createElement('input');
+				vol.type = 'range'; vol.min = 0; vol.max=1; vol.step=0.01; vol.value = track.gainNode.gain.value || 0.8;
+				vol.style.width = '100px';
+				vol.addEventListener('input', ()=>{ track.gainNode.gain.value = parseFloat(vol.value); });
 
-                            case 'Uranus':
-                                // Tilted, unusual rotation patterns
-                                for (let tilt = 0; tilt < 6; tilt++) {
-                                    ctx.beginPath();
-                                    for (let i = 0; i < bufferLength; i += 2) {
-                                        const t = i / bufferLength;
-                                        const value = (dataArray[i] - 128) / 128;
-                                        const angle = t * Math.PI * 2 + time * 0.6;
-                                        const r = 140 + tilt * 25 + value * 50;
-                                        // Tilted 90 degrees
-                                        const x = centerX + Math.cos(angle) * r * 0.4;
-                                        const y = centerY + Math.sin(angle) * r;
-                                        if (i === 0) ctx.moveTo(x, y);
-                                        else ctx.lineTo(x, y);
-                                    }
-                                    ctx.closePath();
-                                    ctx.strokeStyle = sound.color + '99';
-                                    ctx.stroke();
-                                }
-                                break;
+				const btnPlay = document.createElement('button'); btnPlay.textContent = 'Play';
+				btnPlay.addEventListener('click', ()=>{ toggleTrackPlay(track, btnPlay); });
 
-                            case 'Neptune':
-                                // Deep, mysterious flowing forms
-                                for (let flow = 0; flow < 5; flow++) {
-                                    ctx.beginPath();
-                                    for (let i = 0; i < bufferLength; i += 3) {
-                                        const t = i / bufferLength;
-                                        const value = (dataArray[i] - 128) / 128;
-                                        const angle = t * Math.PI * 3 + time * 0.3 + (flow * Math.PI * 2 / 5);
-                                        const depth = Math.sin(t * 5 + time + flow) * 40;
-                                        const r = 160 + value * 100 + depth;
-                                        const x = centerX + Math.cos(angle) * r;
-                                        const y = centerY + Math.sin(angle) * r;
-                                        if (i === 0) ctx.moveTo(x, y);
-                                        else ctx.lineTo(x, y);
-                                    }
-                                    ctx.strokeStyle = sound.color + 'bb';
-                                    ctx.lineWidth = 2.5;
-                                    ctx.stroke();
-                                    ctx.lineWidth = 2;
-                                }
-                                break;
-                        }
+				const btnSolo = document.createElement('button'); btnSolo.textContent = 'Solo';
+				btnSolo.addEventListener('click', ()=>{ track.solo = !track.solo; updateSoloStates(); btnSolo.style.background = track.solo ? '#fde68a' : ''; });
 
-                    } else {
-                        // Wave mode
-                        ctx.beginPath();
-                        const sliceWidth = canvas.width / bufferLength;
-                        let x = 0;
+				const btnMute = document.createElement('button'); btnMute.textContent = 'Mute';
+				btnMute.addEventListener('click', ()=>{ track.gainNode.gain.value = (track.gainNode.gain.value>0)?0:0.8; vol.value = track.gainNode.gain.value; });
 
-                        for (let i = 0; i < bufferLength; i++) {
-                            const v = dataArray[i] / 128.0;
-                            const y = (v * canvas.height) / 2 + soundIndex * 50;
+				const remove = document.createElement('button'); remove.textContent = 'Remove';
+				remove.addEventListener('click', ()=>{ stopTrack(track); item.remove(); const idx = tracks.findIndex(t=>t.id===track.id); if(idx>=0) tracks.splice(idx,1); });
 
-                            if (i === 0) ctx.moveTo(x, y);
-                            else ctx.lineTo(x, y);
+				item.appendChild(title);
+				item.appendChild(vol);
+				item.appendChild(btnPlay);
+				item.appendChild(btnSolo);
+				item.appendChild(btnMute);
+				item.appendChild(remove);
 
-                            x += sliceWidth;
-                        }
-                        ctx.stroke();
+				trackList.appendChild(item);
+			}
+
+			function updateSoloStates(){
+				const anySolo = tracks.some(t=>t.solo);
+				tracks.forEach(t=>{
+					if(anySolo){
+						t.gainNode.gain.value = t.solo ? (t.gainNode.gain.value || 0.8) : 0;
+					}
+				});
+			}
+
+			function toggleTrackPlay(track, btn){
+				if(track.type === 'synth'){
+					track.playing = !track.playing;
+					track.gainNode.gain.value = track.playing ? 0.8 : 0;
+					btn.textContent = track.playing ? 'Pause' : 'Play';
+				}else if(track.type === 'file'){
+					if(track.playing){
+						// stop
+						if(track.source){ track.source.stop(); track.source.disconnect(); }
+						track.playing = false; btn.textContent = 'Play';
+					}else{
+						// create new buffer source
+						const src = audioCtx.createBufferSource();
+						src.buffer = track.buffer;
+						src.loop = true;
+						src.connect(track.gainNode);
+						src.start();
+						track.source = src;
+						track.playing = true; btn.textContent = 'Pause';
+					}
+				}
+			}
+
+			function stopTrack(track){
+				if(track.type === 'synth'){
+					track.gainNode.gain.value = 0;
+					track.playing = false;
+				}else if(track.type === 'file'){
+					if(track.source){ track.source.stop(); track.source.disconnect(); track.source = null; }
+					track.playing = false;
+				}
+			}
+
+			function stopAllTracks(){ tracks.slice().forEach(stopTrack); }
+
+			playAll.addEventListener('click', ()=>{ ensureAudioContext(); // resume if suspended
+				if(audioCtx.state === 'suspended') audioCtx.resume();
+				// for synths, set gain to default; for files, start sources
+				tracks.forEach(t=>{
+					if(t.type === 'synth'){ t.playing = true; t.gainNode.gain.value = 0.8; const btn = document.querySelector('#track-'+t.id+' button'); if(btn) btn.textContent='Pause'; }
+					if(t.type === 'file' && !t.playing){ toggleTrackPlay(t, document.querySelector('#track-'+t.id+' button')); }
+				});
+			});
+
+			pauseAll.addEventListener('click', ()=>{ audioCtx && audioCtx.suspend(); });
+			stopAll.addEventListener('click', ()=>{ if(audioCtx && audioCtx.state!=='closed') audioCtx.close().then(()=>{ audioCtx=null; master.gainNode=null; master.analyser=null; tracks.length=0; trackList.innerHTML=''; drawClear(); }); });
+
+    addSineBtn.addEventListener('click', addSynthTrack);
+    fileInput.addEventListener('change', (e)=>{ const f = e.target.files && e.target.files[0]; if(f) addFileTrack(f); e.target.value=''; });
+
+    // NASA preset: add 3 spacey synth tracks inspired by cosmic sounds
+    document.getElementById('nasaSounds').addEventListener('click', ()=>{
+      const presets = [
+        {name:'Cosmic Hum', freq:85},
+        {name:'Star Pulse', freq:147},
+        {name:'Nebula Wave', freq:258}
+      ];
+      presets.forEach(p=>{
+        ensureAudioContext();
+        const id = crypto ? crypto.randomUUID() : String(Date.now()+Math.random());
+        const gain = audioCtx.createGain();
+        gain.gain.value = 0.6;
+        gain.connect(master.gainNode);
+
+        const osc = audioCtx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = p.freq;
+
+        const lfo = audioCtx.createOscillator();
+        lfo.type = 'triangle';
+        lfo.frequency.value = 0.1 + Math.random()*0.3;
+        const lfoGain = audioCtx.createGain();
+        lfoGain.gain.value = 20 + Math.random()*40;
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+
+        osc.connect(gain);
+        osc.start();
+        lfo.start();
+
+        const track = {id, name:p.name, type:'synth', oscillator:osc, lfo, lfoGain, gainNode:gain, playing:false, solo:false};
+        tracks.push(track);
+        renderTrack(track);
+      });
+    });
+			// Visualization loop
+			function drawClear(){ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#071018'; ctx.fillRect(0,0,canvas.width,canvas.height); }
+
+			function draw(){
+				requestAnimationFrame(draw);
+				if(!audioCtx || !master.analyser) { drawClear(); return; }
+				const w = canvas.width; const h = canvas.height;
+				ctx.fillStyle = '#071018'; ctx.fillRect(0,0,w,h);
+
+				const bufferLength = master.analyser.fftSize;
+				const data = new Uint8Array(bufferLength);
+				master.analyser.getByteTimeDomainData(data);
+
+				// waveform
+				ctx.lineWidth = 2;
+				ctx.strokeStyle = '#60a5fa';
+				ctx.beginPath();
+				const slice = w / bufferLength;
+				for(let i=0;i<bufferLength;i++){
+					const v = data[i]/128.0; // 0..2
+					const y = v * h/2;
+					const x = i*slice;
+					if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+				}
+				ctx.stroke();
 
                         // Frequency bars
                         sound.analyser.getByteFrequencyData(dataArray);
@@ -897,33 +543,5 @@
                 });
             }
 
-            draw();
-        }
+			draw();
 
-        function clearWaves() {
-            ctx.fillStyle = 'rgba(10, 10, 20, 1)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        function saveArt() {
-            const link = document.createElement('a');
-            link.download = `planetary-soundwaves-${Date.now()}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
-        }
-
-        function toggleGeometry() {
-            geometricMode = !geometricMode;
-            const btn = document.getElementById('geoBtn');
-            btn.textContent = geometricMode ? 'Geometric' : 'Wave';
-        }
-
-        window.addEventListener('resize', () => {
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-        });
-
-        init();
-    </script>
-</body>
-</html>
